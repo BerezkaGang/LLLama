@@ -1,0 +1,637 @@
+IMPORT ("Std")
+PUBLIC ("main", true)
+EXTERN ("lowercase", true)
+EXTERN ("uppercase", true)
+EXTERN ("tagHash", true)
+EXTERN ("flatCompare", true)
+EXTERN ("compareTags", true)
+EXTERN ("kindOf", true)
+EXTERN ("time", true)
+EXTERN ("random", true)
+EXTERN ("disableGC", true)
+EXTERN ("enableGC", true)
+EXTERN ("s__Infix_37", true)
+EXTERN ("s__Infix_47", true)
+EXTERN ("s__Infix_42", true)
+EXTERN ("s__Infix_45", true)
+EXTERN ("s__Infix_43", true)
+EXTERN ("s__Infix_62", true)
+EXTERN ("s__Infix_6261", true)
+EXTERN ("s__Infix_60", true)
+EXTERN ("s__Infix_6061", true)
+EXTERN ("s__Infix_3361", true)
+EXTERN ("s__Infix_6161", true)
+EXTERN ("s__Infix_3838", true)
+EXTERN ("s__Infix_3333", true)
+EXTERN ("s__Infix_58", true)
+EXTERN ("i__Infix_4343", true)
+EXTERN ("compare", true)
+EXTERN ("write", true)
+EXTERN ("read", true)
+EXTERN ("failure", true)
+EXTERN ("fexists", true)
+EXTERN ("fwrite", true)
+EXTERN ("fread", true)
+EXTERN ("fclose", true)
+EXTERN ("fopen", true)
+EXTERN ("fprintf", true)
+EXTERN ("printf", true)
+EXTERN ("makeString", true)
+EXTERN ("sprintf", true)
+EXTERN ("regexpMatch", true)
+EXTERN ("regexp", true)
+EXTERN ("substring", true)
+EXTERN ("matchSubString", true)
+EXTERN ("stringcat", true)
+EXTERN ("readLine", true)
+EXTERN ("tl", true)
+EXTERN ("hd", true)
+EXTERN ("snd", true)
+EXTERN ("fst", true)
+EXTERN ("hash", true)
+EXTERN ("clone", true)
+EXTERN ("length", true)
+EXTERN ("string", true)
+EXTERN ("makeArray", true)
+EXTERN ("stringInt", true)
+EXTERN ("sysargs", false)
+EXTERN ("system", true)
+EXTERN ("getEnv", true)
+EXTERN ("assert", true)
+LABEL ("main")
+BEGIN ("main", 2, 3, [], [], [])
+SLABEL ("1")
+LINE (24)
+STRING ("Pattern matching is a better way to deal with the structure of a value:\\n")
+CALL ("printf", 1, false)
+DROP
+LINE (26)
+CONST (3)
+CALL ("show", 1, false)
+DROP
+LINE (27)
+CONST (3)
+CALL (".array", 1, false)
+CALL ("show", 1, false)
+DROP
+LINE (28)
+CONST (1)
+CONST (2)
+CONST (0)
+SEXP ("cons", 2)
+SEXP ("cons", 2)
+CALL ("show", 1, false)
+DROP
+LINE (29)
+STRING ("abc")
+CONST (1)
+LINE (30)
+CLOSURE ("lambda_0", [])
+CALL (".array", 2, false)
+CONST (3)
+CONST (4)
+CONST (0)
+SEXP ("cons", 2)
+SEXP ("cons", 2)
+CALL (".array", 3, false)
+CALL ("show", 1, false)
+DROP
+STRING ("But the main designation of pattern matching is to deal with S-expressions.\\n")
+CALL ("printf", 1, false)
+DROP
+LINE (32)
+STRING ("You can discriminate the scrutinee on the tag:\\n")
+CALL ("printf", 1, false)
+DROP
+SEXP ("E", 0)
+DUP
+SLABEL ("45")
+DUP
+TAG ("A", 0)
+CJMP ("nz", "43")
+LABEL ("44")
+DROP
+JMP ("42")
+LABEL ("43")
+DROP
+DROP
+SLABEL ("47")
+LINE (36)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("48")
+JMP ("38")
+SLABEL ("46")
+SLABEL ("54")
+LABEL ("42")
+DUP
+DUP
+TAG ("B", 0)
+CJMP ("nz", "52")
+LABEL ("53")
+DROP
+JMP ("51")
+LABEL ("52")
+DROP
+DROP
+SLABEL ("56")
+LINE (37)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("57")
+JMP ("38")
+SLABEL ("55")
+SLABEL ("63")
+LABEL ("51")
+DUP
+DUP
+TAG ("C", 0)
+CJMP ("nz", "61")
+LABEL ("62")
+DROP
+JMP ("60")
+LABEL ("61")
+DROP
+DROP
+SLABEL ("65")
+LINE (38)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("66")
+JMP ("38")
+SLABEL ("64")
+SLABEL ("72")
+LABEL ("60")
+DUP
+DUP
+TAG ("D", 0)
+CJMP ("nz", "70")
+LABEL ("71")
+DROP
+JMP ("69")
+LABEL ("70")
+DROP
+DROP
+SLABEL ("74")
+LINE (39)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("75")
+JMP ("38")
+SLABEL ("73")
+SLABEL ("80")
+LABEL ("69")
+DUP
+DUP
+TAG ("E", 0)
+CJMP ("nz", "78")
+LABEL ("79")
+DROP
+JMP ("39")
+LABEL ("78")
+DROP
+DROP
+SLABEL ("82")
+LINE (40)
+STRING ("Yes, this is E.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("83")
+SLABEL ("81")
+JMP ("38")
+LABEL ("39")
+FAIL ((35, 5), false)
+JMP ("38")
+LABEL ("38")
+LINE (41)
+STRING ("You can discriminate the scrutinee on the number of arguments as well:\\n")
+CALL ("printf", 1, false)
+DROP
+SEXP ("A", 0)
+DUP
+SLABEL ("96")
+DUP
+TAG ("A", 1)
+CJMP ("nz", "94")
+LABEL ("95")
+DROP
+JMP ("93")
+LABEL ("94")
+DUP
+CONST (0)
+ELEM
+DROP
+DROP
+DROP
+SLABEL ("98")
+LINE (46)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("99")
+JMP ("89")
+SLABEL ("97")
+SLABEL ("105")
+LABEL ("93")
+DUP
+DUP
+TAG ("A", 2)
+CJMP ("nz", "103")
+LABEL ("104")
+DROP
+JMP ("102")
+LABEL ("103")
+DUP
+CONST (0)
+ELEM
+DROP
+DUP
+CONST (1)
+ELEM
+DROP
+DROP
+DROP
+SLABEL ("107")
+LINE (47)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("108")
+JMP ("89")
+SLABEL ("106")
+SLABEL ("114")
+LABEL ("102")
+DUP
+DUP
+TAG ("A", 0)
+CJMP ("nz", "112")
+LABEL ("113")
+DROP
+JMP ("111")
+LABEL ("112")
+DROP
+DROP
+SLABEL ("116")
+LINE (48)
+STRING ("This is A with no subvalues.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("117")
+JMP ("89")
+SLABEL ("115")
+SLABEL ("122")
+LABEL ("111")
+DUP
+DUP
+TAG ("A", 3)
+CJMP ("nz", "120")
+LABEL ("121")
+DROP
+JMP ("90")
+LABEL ("120")
+DUP
+CONST (0)
+ELEM
+DROP
+DUP
+CONST (1)
+ELEM
+DROP
+DUP
+CONST (2)
+ELEM
+DROP
+DROP
+DROP
+SLABEL ("124")
+LINE (49)
+STRING ("Nope.\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("125")
+SLABEL ("123")
+JMP ("89")
+LABEL ("90")
+FAIL ((45, 5), false)
+JMP ("89")
+LABEL ("89")
+LINE (50)
+STRING ("You may also use composite patterns:\\n")
+CALL ("printf", 1, false)
+DROP
+STRING ("x")
+STRING ("y")
+STRING ("z")
+CALL (".array", 3, false)
+CONST (1)
+CONST (2)
+CONST (3)
+CONST (0)
+SEXP ("cons", 2)
+SEXP ("cons", 2)
+SEXP ("cons", 2)
+SEXP ("A", 2)
+DUP
+SLABEL ("150")
+DUP
+TAG ("A", 2)
+CJMP ("nz", "144")
+LABEL ("145")
+DROP
+JMP ("131")
+LABEL ("144")
+DUP
+CONST (0)
+ELEM
+DUP
+ARRAY (3)
+CJMP ("nz", "146")
+LABEL ("147")
+DROP
+JMP ("145")
+LABEL ("146")
+DUP
+CONST (0)
+ELEM
+DROP
+DUP
+CONST (1)
+ELEM
+DROP
+DUP
+CONST (2)
+ELEM
+DROP
+DROP
+DUP
+CONST (1)
+ELEM
+DUP
+TAG ("cons", 2)
+CJMP ("nz", "148")
+LABEL ("149")
+DROP
+JMP ("145")
+LABEL ("148")
+DUP
+CONST (0)
+ELEM
+DROP
+DUP
+CONST (1)
+ELEM
+DROP
+DROP
+DROP
+DUP
+CONST (0)
+ELEM
+ST (Local (2))
+DROP
+DUP
+CONST (0)
+ELEM
+CONST (2)
+ELEM
+ST (Local (1))
+DROP
+DUP
+CONST (1)
+ELEM
+CONST (1)
+ELEM
+ST (Local (0))
+DROP
+DROP
+SLABEL ("152")
+LINE (55)
+STRING ("a=%s, z=%s, tl=%s\\n")
+LD (Local (2))
+CALL ("string", 1, false)
+LD (Local (1))
+CALL ("string", 1, false)
+LD (Local (0))
+CALL ("string", 1, false)
+CALL ("printf", 4, false)
+SLABEL ("153")
+SLABEL ("151")
+JMP ("0")
+LABEL ("131")
+FAIL ((54, 5), true)
+JMP ("0")
+SLABEL ("2")
+LABEL ("0")
+END
+LABEL ("lambda_0")
+BEGIN ("lambda_0", 1, 0, [], ["x"], [{ blab="161"; elab="162"; names=[]; subs=[{ blab="164"; elab="165"; names=[]; subs=[]; }]; }])
+SLABEL ("161")
+SLABEL ("164")
+LINE (30)
+LD (Arg (0))
+CONST (1)
+BINOP ("+")
+SLABEL ("165")
+LABEL ("163")
+SLABEL ("162")
+END
+LABEL ("show")
+BEGIN ("show", 1, 0, [], ["x"], [{ blab="168"; elab="169"; names=[]; subs=[{ blab="171"; elab="172"; names=[]; subs=[]; }]; }])
+SLABEL ("168")
+SLABEL ("171")
+LINE (21)
+CONST (0)
+LINE (23)
+LD (Arg (0))
+CALL ("show_25", 2, true)
+SLABEL ("172")
+LABEL ("170")
+SLABEL ("169")
+END
+LABEL ("show_25")
+BEGIN ("show_25", 2, 1, [], ["level"; "x"], [{ blab="175"; elab="176"; names=[]; subs=[{ blab="178"; elab="179"; names=[]; subs=[{ blab="249"; elab="250"; names=[]; subs=[{ blab="251"; elab="252"; names=[]; subs=[{ blab="254"; elab="255"; names=[("i", 0)]; subs=[{ blab="277"; elab="278"; names=[]; subs=[]; }; { blab="266"; elab="267"; names=[]; subs=[{ blab="268"; elab="269"; names=[]; subs=[]; }]; }; { blab="262"; elab="263"; names=[]; subs=[{ blab="264"; elab="265"; names=[]; subs=[]; }]; }]; }]; }]; }; { blab="244"; elab="245"; names=[]; subs=[{ blab="246"; elab="247"; names=[]; subs=[]; }]; }; { blab="232"; elab="233"; names=[]; subs=[{ blab="234"; elab="235"; names=[]; subs=[]; }]; }; { blab="226"; elab="227"; names=[]; subs=[{ blab="228"; elab="229"; names=[]; subs=[]; }]; }; { blab="219"; elab="220"; names=[]; subs=[{ blab="221"; elab="222"; names=[]; subs=[]; }]; }; { blab="212"; elab="213"; names=[]; subs=[{ blab="214"; elab="215"; names=[]; subs=[]; }]; }; { blab="204"; elab="205"; names=[]; subs=[{ blab="206"; elab="207"; names=[]; subs=[]; }]; }; { blab="181"; elab="182"; names=[("i", 0)]; subs=[{ blab="192"; elab="193"; names=[]; subs=[]; }]; }]; }]; }])
+SLABEL ("175")
+SLABEL ("178")
+SLABEL ("181")
+CONST (0)
+LINE (3)
+ST (Local (0))
+DROP
+JMP ("188")
+FLABEL ("187")
+SLABEL ("192")
+STRING (" ")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("193")
+LD (Local (0))
+CONST (1)
+BINOP ("+")
+ST (Local (0))
+DROP
+LABEL ("188")
+LD (Local (0))
+LD (Arg (0))
+BINOP ("<")
+CJMP ("nz", "187")
+SLABEL ("182")
+LINE (7)
+LD (Arg (1))
+DUP
+SLABEL ("204")
+PATT (UnBoxed)
+CJMP ("z", "203")
+DROP
+SLABEL ("206")
+LINE (8)
+STRING ("integer %d\\n")
+LD (Arg (1))
+CALL ("printf", 2, false)
+DROP
+SLABEL ("207")
+JMP ("200")
+SLABEL ("205")
+SLABEL ("212")
+LABEL ("203")
+DUP
+PATT (Array)
+CJMP ("z", "211")
+DROP
+SLABEL ("214")
+LINE (9)
+STRING ("array\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("215")
+JMP ("200")
+SLABEL ("213")
+SLABEL ("219")
+LABEL ("211")
+DUP
+PATT (String)
+CJMP ("z", "218")
+DROP
+SLABEL ("221")
+LINE (10)
+STRING ("string\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("222")
+JMP ("200")
+SLABEL ("220")
+SLABEL ("226")
+LABEL ("218")
+DUP
+PATT (Sexp)
+CJMP ("z", "225")
+DROP
+SLABEL ("228")
+LINE (11)
+STRING ("S-expression\\n")
+CALL ("printf", 1, false)
+DROP
+SLABEL ("229")
+JMP ("200")
+SLABEL ("227")
+SLABEL ("232")
+LABEL ("225")
+DUP
+PATT (Closure)
+CJMP ("z", "201")
+DROP
+SLABEL ("234")
+LINE (12)
+STRING ("closure 0x%x\\n")
+LD (Arg (1))
+CONST (0)
+ELEM
+CALL ("printf", 2, false)
+DROP
+SLABEL ("235")
+SLABEL ("233")
+JMP ("200")
+LABEL ("201")
+FAIL ((7, 9), false)
+JMP ("200")
+LABEL ("200")
+LINE (15)
+LD (Arg (1))
+DUP
+SLABEL ("244")
+PATT (UnBoxed)
+CJMP ("z", "243")
+DROP
+SLABEL ("246")
+CONST (0)
+SLABEL ("247")
+JMP ("177")
+SLABEL ("245")
+SLABEL ("249")
+LABEL ("243")
+DUP
+DROP
+DROP
+SLABEL ("251")
+SLABEL ("254")
+LD (Arg (1))
+DUP
+SLABEL ("262")
+PATT (Closure)
+CJMP ("z", "261")
+DROP
+SLABEL ("264")
+CONST (1)
+SLABEL ("265")
+JMP ("258")
+SLABEL ("263")
+SLABEL ("266")
+LABEL ("261")
+DUP
+DROP
+DROP
+SLABEL ("268")
+CONST (0)
+SLABEL ("269")
+SLABEL ("267")
+JMP ("258")
+LABEL ("258")
+LINE (17)
+ST (Local (0))
+DROP
+JMP ("272")
+FLABEL ("271")
+SLABEL ("277")
+LINE (18)
+LD (Arg (0))
+CONST (2)
+BINOP ("+")
+LD (Arg (1))
+LD (Local (0))
+ELEM
+CALL ("show_25", 2, false)
+DROP
+SLABEL ("278")
+LD (Local (0))
+CONST (1)
+BINOP ("+")
+LINE (17)
+ST (Local (0))
+DROP
+LABEL ("272")
+LD (Local (0))
+LD (Arg (1))
+CALL ("length", 1, false)
+BINOP ("<")
+CJMP ("nz", "271")
+SLABEL ("255")
+CONST (0)
+SLABEL ("252")
+SLABEL ("250")
+JMP ("177")
+SLABEL ("179")
+LABEL ("177")
+SLABEL ("176")
+END
