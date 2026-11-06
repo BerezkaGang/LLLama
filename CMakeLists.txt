@@ -1,4 +1,4 @@
-project(lama-jit)
+cmake_minimum_required(VERSION 3.31)
+project(LLLama)
 
-
-add_executable(jit disasm.c bytecode.c opcodes.c main.c memory.c)
+add_executable(${PROJECT_NAME} disasm.c bytecode.c opcodes.c main.c memory.c)
