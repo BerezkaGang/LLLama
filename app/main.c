@@ -1,4 +1,4 @@
-#include "disasm.h"
+#include "lllama/disasm.h"
 #include "stdio.h"
 
 void dump_bytecode(FILE *f, const bytecode *bc);
