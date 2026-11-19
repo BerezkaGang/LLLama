@@ -1,7 +1,10 @@
 #ifndef DISASM_H
 #define DISASM_H
 
+extern "C" {
 #include "bytecode.h"
+}
+
 #include <stdio.h>
 
 /* Disassemble all public symbols in bc, writing output to f.
