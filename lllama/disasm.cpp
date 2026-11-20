@@ -64,6 +64,50 @@ struct BBInfo {
   std::vector<size_t> pred;
 };
 
+template<typename ...Ts>
+Value* createBinop(uint8_t opcode, Type* ptrTy, IRBuilder<Ts...>& builder, Value* left, Value* right) {
+  switch (opcode) {
+  case OP_BINOP_ADD:
+    return builder.CreateAdd(left, right);
+  case OP_BINOP_SUB:
+    return builder.CreateSub(left, right);
+  case OP_BINOP_MUL:
+    return builder.CreateMul(left, right);
+  case OP_BINOP_DIV:
+    return builder.CreateSDiv(left, right);
+  case OP_BINOP_MOD:
+    return builder.CreateSRem(left, right);
+  case OP_BINOP_AND:
+    return builder.CreateAnd(left, right);
+  case OP_BINOP_OR: 
+    return builder.CreateOr(left, right);
+  }
+  CmpInst::Predicate predicate;
+  switch (opcode) {
+  case OP_BINOP_LT:
+    predicate = CmpInst::ICMP_SLT;
+    break;
+  case OP_BINOP_LE:
+    predicate = CmpInst::ICMP_SLE;
+    break;
+  case OP_BINOP_GT:
+    predicate = CmpInst::ICMP_SGT;
+    break;
+  case OP_BINOP_GE:
+    predicate = CmpInst::ICMP_SGE;
+    break;
+  case OP_BINOP_EQ:
+    predicate = CmpInst::ICMP_EQ;
+    break;
+  case OP_BINOP_NE:
+    predicate = CmpInst::ICMP_NE;
+    break;
+  default:
+    assert(false && "Invalid binop");
+  }
+  Value* cmp = builder.CreateICmp(predicate, left, right);
+  return builder.CreateZExt(cmp, ptrTy);
+}
 
 static void disassemble(FILE *f, const bytecode *bc) {
   LLVMContext context;
@@ -171,12 +215,16 @@ static void disassemble(FILE *f, const bytecode *bc) {
       case OP_BINOP_NE:
       case OP_BINOP_AND:
       case OP_BINOP_OR: {
-        auto second = curBBInfo.stack.back();
+        // plain implementation, can be optimized 
+        auto right = curBBInfo.stack.back();
         curBBInfo.stack.pop_back();
-        auto first = curBBInfo.stack.back();
+        auto left = curBBInfo.stack.back();
         curBBInfo.stack.pop_back();
-        // TODO: runtime call or specific ops
-        auto res = builder.CreateAdd(first, second);
+        auto one = ConstantInt::get(ptrTy, 1);
+        left = builder.CreateAShr(left, one);
+        right = builder.CreateAShr(right, one);
+        auto res = createBinop(instr.opcode, ptrTy, builder, left, right);
+        res = builder.CreateShl(res, one);
         curBBInfo.stack.push_back(res);
         break;
       }
