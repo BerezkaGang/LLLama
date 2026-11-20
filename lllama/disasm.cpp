@@ -151,11 +151,13 @@ static void disassemble(FILE *f, const bytecode *bc) {
     bool end = false;
     while (!end) {
       size_t offset = reader_pos(&reader);
-      uint8_t x = reader_u8(&reader);
+      Instr instr = readInstr(&reader);
+      printInstr(f, &reader, bc, instr);
+      size_t nextOffset = reader_pos(&reader);
 
       fprintf(f, "0x%.8x:\t", (unsigned int)offset);
 
-      switch (x) {
+      switch (instr.opcode) {
       case OP_BINOP_ADD:
       case OP_BINOP_SUB:
       case OP_BINOP_MUL:
@@ -169,8 +171,6 @@ static void disassemble(FILE *f, const bytecode *bc) {
       case OP_BINOP_NE:
       case OP_BINOP_AND:
       case OP_BINOP_OR: {
-        fprintf(f, "%s", opcode_to_string(x));
-        fflush(f);
         auto second = curBBInfo.stack.back();
         curBBInfo.stack.pop_back();
         auto first = curBBInfo.stack.back();
@@ -182,59 +182,55 @@ static void disassemble(FILE *f, const bytecode *bc) {
       }
 
       case OP_CONST: {
-        auto value = reader_i32(&reader);
+        auto value = instr.operands[0];
         auto val = ConstantInt::get(ptrTy, BOX(value));
         curBBInfo.stack.push_back(val);
-        fprintf(f, "%s\t%d", opcode_to_string(x), value);
         break;
       }
 
       case OP_STRING:
-        fprintf(f, "%s\t", opcode_to_string(x));
-        print_escaped_string(f, bytecode_get_string(bc, reader_i32(&reader)));
-        break;
-
       case OP_SEXP:
-        fprintf(f, "%s\t", opcode_to_string(x));
-        print_escaped_string(f, bytecode_get_string(bc, reader_i32(&reader)));
-        fprintf(f, " %d", reader_i32(&reader));
         break;
 
       case OP_END:
-        fprintf(f, "%s", opcode_to_string(x));
         builder.CreateRetVoid();
         end = true;
         break;
+
       case OP_STA:
-        fprintf(f, "%s", opcode_to_string(x));
         break;
-      case OP_DROP: {
-        fprintf(f, "%s", opcode_to_string(x));
+
+      case OP_DROP:
         curBBInfo.stack.pop_back();
         break;
-      }
+
       case OP_DUP:
       case OP_SWAP:
       case OP_ELEM:
-        fprintf(f, "%s", opcode_to_string(x));
         break;
 
       case OP_JMP:
       case OP_CJMP_Z:
       case OP_CJMP_NZ: {
-        auto target = reader_i32(&reader);
-        fprintf(f, "%s\t0x%.8x", opcode_to_string(x), target);
-        if (x != OP_JMP) {
+        auto target = instr.operands[0];
+
+        if (instr.opcode != OP_JMP) {
+          auto operand = curBBInfo.stack.back();
           curBBInfo.stack.pop_back();
-          auto nextOff = reader_pos(&reader);
-          queue.push_back(nextOff);
-          bbInfo[nextOff].pred.push_back(curOffset);
-          bbInfo[nextOff].entryStack.resize(curBBInfo.stack.size());
-          auto cond = builder.CreateICmp(x == OP_CJMP_Z ? CmpInst::ICMP_EQ : CmpInst::ICMP_NE, curBBInfo.stack.back(), ConstantInt::get(ptrTy, BOX(0)));
-          builder.CreateCondBr(cond, bbInfo[target].bb, bbInfo[nextOff].bb);
+          queue.push_back(nextOffset);
+          bbInfo[nextOffset].pred.push_back(curOffset);
+          bbInfo[nextOffset].entryStack.resize(curBBInfo.stack.size());
+
+          auto cond = builder.CreateICmp(
+              instr.opcode == OP_CJMP_Z ? CmpInst::ICMP_EQ : CmpInst::ICMP_NE,
+              operand,
+              ConstantInt::get(ptrTy, BOX(0)));
+
+          builder.CreateCondBr(cond, bbInfo[target].bb, bbInfo[nextOffset].bb);
         } else {
-            builder.CreateBr(bbInfo[target].bb);
+          builder.CreateBr(bbInfo[target].bb);
         }
+
         queue.push_back(target);
         bbInfo[target].pred.push_back(curOffset);
         bbInfo[target].entryStack.resize(curBBInfo.stack.size());
@@ -248,45 +244,34 @@ static void disassemble(FILE *f, const bytecode *bc) {
       case OP_ST_LOC:
       case OP_ST_ARG:
       case OP_ST_CLO:
-        fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
         break;
+
       case OP_ST_GLO: {
-        auto gloNo = reader_i32(&reader);
-        fprintf(f, "%s\t%d", opcode_to_string(x), gloNo);
+        auto gloNo = instr.operands[0];
         builder.CreateStore(curBBInfo.stack.back(), globals[gloNo]);
         break;
       }
+
       case OP_LD_GLO: {
-        auto gloNo = reader_i32(&reader);
-        fprintf(f, "%s\t%d", opcode_to_string(x), gloNo);
-        fflush(f);
+        auto gloNo = instr.operands[0];
         auto val = builder.CreateLoad(ptrTy, globals[gloNo]);
         curBBInfo.stack.push_back(val);
         break;
       }
 
       case OP_BEGIN: {
-        fprintf(f, "%s\t%d ", opcode_to_string(x), reader_i32(&reader));
-        fprintf(f, "%d", reader_i32(&reader));
-        auto pos = reader_pos(&reader);
         break;
-       }
+      }
 
       case OP_BEGIN_CLOSURE:
-        fprintf(f, "%s\t%d ", opcode_to_string(x), reader_i32(&reader));
-        fprintf(f, "%d ", reader_i32(&reader));
-        fprintf(f, "%d", reader_i32(&reader));
         break;
 
       case OP_CLOSURE: {
-        int32_t n;
-        fprintf(f, "%s\t0x%.8x", opcode_to_string(x),
-                (unsigned int)reader_i32(&reader));
-        n = reader_i32(&reader);
-        fprintf(f, " %d", n);
+        int32_t n = instr.operands[1];
+
         for (int32_t i = 0; i < n; i++) {
           uint8_t ref = reader_u8(&reader);
-          fprintf(f, " %u %d", (unsigned int)ref, reader_i32(&reader));
+          int32_t value = reader_i32(&reader);
         }
         break;
       }
@@ -294,24 +279,14 @@ static void disassemble(FILE *f, const bytecode *bc) {
       case OP_CALLC:
       case OP_ARRAY:
       case OP_LINE:
-        fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-        break;
       case OP_CALL:
-        fprintf(f, "%s\t0x%.8x ", opcode_to_string(x),
-                (unsigned int)reader_i32(&reader));
-        fprintf(f, "%d", reader_i32(&reader));
         break;
 
       case OP_TAG:
-        fprintf(f, "%s\t", opcode_to_string(x));
-        print_escaped_string(f, bytecode_get_string(bc, reader_i32(&reader)));
-        fprintf(f, " %d", reader_i32(&reader));
         break;
 
       case OP_FAIL:
       case OP_FAIL_KEEP:
-        fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-        fprintf(f, "%d", reader_i32(&reader));
         break;
 
       case OP_PATT_STR_CMP:
@@ -321,19 +296,12 @@ static void disassemble(FILE *f, const bytecode *bc) {
       case OP_PATT_BOXED:
       case OP_PATT_UNBOXED:
       case OP_PATT_CLOSURE:
-        fprintf(f, "%s", opcode_to_string(x));
         break;
 
       case OP_BARRAY:
-        fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-        break;
-
       case OP_EOF:
-        fprintf(f, "%s\n", opcode_to_string(x));
-        break;
-
       default:
-        fprintf(f, "%s\n", opcode_to_string(x));
+        break;
       }
       fprintf(f, "\n");
       fprintf(f, "stack size: %zu\n", curBBInfo.stack.size());
