@@ -6,6 +6,7 @@ extern "C" {
 #include "runtime_common.h"
 }
 #include "disasm.h"
+#include "decode.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -18,6 +19,7 @@ extern "C" {
 
 using namespace llvm;
 
+// TODO: duplicated with decode
 static void print_escaped_string(FILE *f, const char *s) {
   for (const uint8_t *p = (const uint8_t *)s; *p; p++) {
     switch (*p) {
@@ -62,6 +64,7 @@ struct BBInfo {
   std::vector<size_t> pred;
 };
 
+
 static void disassemble(FILE *f, const bytecode *bc) {
   LLVMContext context;
   IRBuilder<> builder(context);
@@ -96,79 +99,24 @@ static void disassemble(FILE *f, const bytecode *bc) {
   bool end = false;
   while (!end) {
     size_t offset = reader_pos(&reader);
-    uint8_t x = reader_u8(&reader);
 
     fprintf(f, "0x%.8x:\t", (unsigned int)offset);
-
-    switch (x) {
-    case OP_BINOP_ADD:
-    case OP_BINOP_SUB:
-    case OP_BINOP_MUL:
-    case OP_BINOP_DIV:
-    case OP_BINOP_MOD:
-    case OP_BINOP_LT:
-    case OP_BINOP_LE:
-    case OP_BINOP_GT:
-    case OP_BINOP_GE:
-    case OP_BINOP_EQ:
-    case OP_BINOP_NE:
-    case OP_BINOP_AND:
-    case OP_BINOP_OR:
-      fprintf(f, "%s", opcode_to_string(x));
-      break;
-
-    case OP_CONST:
-      fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-      break;
-
-    case OP_STRING:
-      fprintf(f, "%s\t", opcode_to_string(x));
-      print_escaped_string(f, bytecode_get_string(bc, reader_i32(&reader)));
-      break;
-
-    case OP_SEXP:
-      fprintf(f, "%s\t", opcode_to_string(x));
-      print_escaped_string(f, bytecode_get_string(bc, reader_i32(&reader)));
-      fprintf(f, " %d", reader_i32(&reader));
-      break;
-
+    Instr instr = readInstr(&reader);
+    printInstr(f, &reader, bc, instr);
+    switch (instr.opcode) {
     case OP_END:
-      fprintf(f, "%s", opcode_to_string(x));
       end = true;
       break;
-    case OP_STA:
-    case OP_DROP:
-    case OP_DUP:
-    case OP_SWAP:
-    case OP_ELEM:
-      fprintf(f, "%s", opcode_to_string(x));
-      break;
-
     case OP_JMP:
     case OP_CJMP_Z:
     case OP_CJMP_NZ: {
-      fprintf(f, "%s\t0x%.8x", opcode_to_string(x), (unsigned int)reader_i32(&reader));
       auto bb = BasicBlock::Create(context, std::string("bb") + std::to_string(bbInfo.size()), appFunc);
       auto pos = reader_pos(&reader);
       auto& curBBInfo = bbInfo[pos];
       curBBInfo.bb = bb;
       break;
     }
-
-    case OP_LD_GLO:
-    case OP_LD_LOC:
-    case OP_LD_ARG:
-    case OP_LD_CLO:
-    case OP_ST_GLO:
-    case OP_ST_LOC:
-    case OP_ST_ARG:
-    case OP_ST_CLO:
-      fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-      break;
-
     case OP_BEGIN: {
-      fprintf(f, "%s\t%d ", opcode_to_string(x), reader_i32(&reader));
-      fprintf(f, "%d", reader_i32(&reader));
       auto pos = reader_pos(&reader);
       auto bb = BasicBlock::Create(context, std::string("bb") + std::to_string(bbInfo.size()), appFunc);
       auto& curBBInfo = bbInfo[pos];
@@ -176,69 +124,9 @@ static void disassemble(FILE *f, const bytecode *bc) {
       queue.push_back(pos);
       break;
      }
-
     case OP_BEGIN_CLOSURE:
-      fprintf(f, "%s\t%d ", opcode_to_string(x), reader_i32(&reader));
-      fprintf(f, "%d ", reader_i32(&reader));
-      fprintf(f, "%d", reader_i32(&reader));
+      // TODO
       break;
-
-    case OP_CLOSURE: {
-      int32_t n;
-      fprintf(f, "%s\t0x%.8x", opcode_to_string(x),
-              (unsigned int)reader_i32(&reader));
-      n = reader_i32(&reader);
-      fprintf(f, " %d", n);
-      for (int32_t i = 0; i < n; i++) {
-        uint8_t ref = reader_u8(&reader);
-        fprintf(f, " %u %d", (unsigned int)ref, reader_i32(&reader));
-      }
-      break;
-    }
-
-    case OP_CALLC:
-    case OP_ARRAY:
-    case OP_LINE:
-      fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-      break;
-    case OP_CALL:
-      fprintf(f, "%s\t0x%.8x ", opcode_to_string(x),
-              (unsigned int)reader_i32(&reader));
-      fprintf(f, "%d", reader_i32(&reader));
-      break;
-
-    case OP_TAG:
-      fprintf(f, "%s\t", opcode_to_string(x));
-      print_escaped_string(f, bytecode_get_string(bc, reader_i32(&reader)));
-      fprintf(f, " %d", reader_i32(&reader));
-      break;
-
-    case OP_FAIL:
-    case OP_FAIL_KEEP:
-      fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-      fprintf(f, "%d", reader_i32(&reader));
-      break;
-
-    case OP_PATT_STR_CMP:
-    case OP_PATT_STRING:
-    case OP_PATT_ARRAY:
-    case OP_PATT_SEXP:
-    case OP_PATT_BOXED:
-    case OP_PATT_UNBOXED:
-    case OP_PATT_CLOSURE:
-      fprintf(f, "%s", opcode_to_string(x));
-      break;
-
-    case OP_BARRAY:
-      fprintf(f, "%s\t%d", opcode_to_string(x), reader_i32(&reader));
-      break;
-
-    case OP_EOF:
-      fprintf(f, "%s\n", opcode_to_string(x));
-      break;
-
-    default:
-      fprintf(f, "%s\n", opcode_to_string(x));
     }
     fprintf(f, "\n");
   }

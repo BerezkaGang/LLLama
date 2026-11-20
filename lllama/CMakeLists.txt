@@ -4,7 +4,7 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-add_library(lllamaLib STATIC disasm.cpp bytecode.c opcodes.c memory.c)
+add_library(lllamaLib STATIC disasm.cpp bytecode.c opcodes.c memory.c decode.cpp)
 target_include_directories(lllamaLib
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PRIVATE ${PROJECT_SOURCE_DIR}/include/lllama
