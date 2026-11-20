@@ -1,6 +1,6 @@
-	.file "/repos/LLLama/examples/CGF.lama"
+	.file "/repos/LLLama/examples/CFG.lama"
 
-	.stabs "/repos/LLLama/examples/CGF.lama",100,0,0,.Ltext
+	.stabs "/repos/LLLama/examples/CFG.lama",100,0,0,.Ltext
 
 	.globl	main
 
@@ -210,15 +210,9 @@ ALIGNED:
 
 L1:
 
-# CALL ("read", 0, false)
+# CONST (1)
 
-	pushq	%rdi
-	pushq	%rsi
-	movq	$0,	%r11
-	call	Lread
-	popq	%rsi
-	popq	%rdi
-	movq	%rax,	%r10
+	movq	$3,	%r10
 # LINE (1)
 
 	.stabn 68,0,1,.L0
@@ -230,15 +224,9 @@ L1:
 	movq	%r10,	global_a(%rip)
 # DROP
 
-# CALL ("read", 0, false)
+# CONST (2)
 
-	pushq	%rdi
-	pushq	%rsi
-	movq	$0,	%r11
-	call	Lread
-	popq	%rsi
-	popq	%rdi
-	movq	%rax,	%r10
+	movq	$5,	%r10
 # LINE (2)
 
 	.stabn 68,0,2,.L1
@@ -260,13 +248,6 @@ L1:
 
 	addq	%r11,	%r10
 	decq	%r10
-# CONST (1)
-
-	movq	$3,	%r11
-# BINOP ("+")
-
-	addq	%r11,	%r10
-	decq	%r10
 # LINE (3)
 
 	.stabn 68,0,3,.L2
@@ -278,11 +259,99 @@ L1:
 	movq	%r10,	global_c(%rip)
 # DROP
 
+# LD (Global ("c"))
+
+	movq	global_c(%rip),	%r10
 # LINE (4)
 
 	.stabn 68,0,4,.L3
 
 .L3:
+
+# LD (Global ("a"))
+
+	movq	global_a(%rip),	%r11
+# CONST (1)
+
+	movq	$3,	%r12
+# BINOP ("==")
+
+	xorq	%rax,	%rax
+	cmpq	%r12,	%r11
+	sete	%al
+	salq	%rax
+	orq	$0x0001,	%rax
+	movq	%rax,	%r11
+# CJMP ("z", "21")
+
+	sarq	%r11
+	cmpq	$0,	%r11
+	jz	L21
+# SLABEL ("24")
+
+L24:
+
+# CONST (5)
+
+	movq	$11,	%r11
+# SLABEL ("25")
+
+L25:
+
+# JMP ("18")
+
+	jmp	L18
+# LABEL ("21")
+
+L21:
+
+# SLABEL ("26")
+
+L26:
+
+# LD (Global ("c"))
+
+	movq	global_c(%rip),	%r11
+# SLABEL ("27")
+
+L27:
+
+# JMP ("18")
+
+	jmp	L18
+# LABEL ("18")
+
+L18:
+
+# CALL ("compare", 2, false)
+
+	pushq	%rdi
+	pushq	%rsi
+	movq	%r11,	%rsi
+	movq	%r10,	%rdi
+	movq	$2,	%r11
+	call	Lcompare
+	popq	%rsi
+	popq	%rdi
+	movq	%rax,	%r10
+# CONST (0)
+
+	movq	$1,	%r11
+# BINOP ("==")
+
+	xorq	%rax,	%rax
+	cmpq	%r11,	%r10
+	sete	%al
+	salq	%rax
+	orq	$0x0001,	%rax
+	movq	%rax,	%r10
+# DROP
+
+# LINE (5)
+
+	.stabn 68,0,5,.L4
+
+.L4:
 
 # LD (Global ("c"))
 

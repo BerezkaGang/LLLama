@@ -3,6 +3,7 @@
 extern "C" {
 #include "bytecode.h"
 #include "opcodes.h"
+#include "runtime_common.h"
 }
 #include "disasm.h"
 
@@ -65,6 +66,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
   LLVMContext context;
   IRBuilder<> builder(context);
   auto mod = std::make_unique<Module>("jit", context);
+  const auto &DL = mod->getDataLayout();
   auto void_ = builder.getVoidTy();
   auto prototype = FunctionType::get(void_, false);
   auto appFunc =
@@ -74,18 +76,18 @@ static void disassemble(FILE *f, const bytecode *bc) {
   byte_reader reader;
   reader_init(&reader, bc->code, bc->code_size);
   std::vector<size_t> queue;
-  auto i32 = builder.getInt32Ty();
+  auto ptrTy = builder.getIntPtrTy(DL);
 
   std::vector<GlobalVariable*> globals;
   for (size_t i = 0; i < bc->globals_count; ++i) {
     globals.push_back(
         new GlobalVariable(
             /*Module=*/*mod, 
-            /*Type=*/i32,
+            /*Type=*/ptrTy,
             /*isConstant=*/false,
-            /*Linkage=*/GlobalValue::CommonLinkage,
-            /*Initializer=*/nullptr, // has initializer, specified below
-            /*Name=*/"abc"
+            /*Linkage=*/GlobalValue::PrivateLinkage,
+            /*Initializer=*/ConstantInt::get(ptrTy, 0),
+            /*Name=*/"global" + std::to_string(i)
           )
         );
   }
@@ -253,7 +255,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
     builder.SetInsertPoint(curBBInfo.bb);
     fprintf(f, "BB %s at 0x%.8x\n", curBBInfo.bb->getName().data(), (unsigned int)curOffset);
     for (size_t i = 0; i < curBBInfo.entryStack.size(); ++i) {
-      curBBInfo.entryStack[i] = builder.CreatePHI(i32, 0);
+      curBBInfo.entryStack[i] = builder.CreatePHI(ptrTy, 0);
       curBBInfo.stack.push_back(curBBInfo.entryStack[i]);
     }
 
@@ -285,7 +287,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
         curBBInfo.stack.pop_back();
         auto first = curBBInfo.stack.back();
         curBBInfo.stack.pop_back();
-        // TODO: runtime call
+        // TODO: runtime call or specific ops
         auto res = builder.CreateAdd(first, second);
         curBBInfo.stack.push_back(res);
         break;
@@ -293,7 +295,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
 
       case OP_CONST: {
         auto value = reader_i32(&reader);
-        auto val = builder.getInt32((value << 1) | 1);
+        auto val = ConstantInt::get(ptrTy, BOX(value));
         curBBInfo.stack.push_back(val);
         fprintf(f, "%s\t%d", opcode_to_string(x), value);
         break;
@@ -340,7 +342,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
           queue.push_back(nextOff);
           bbInfo[nextOff].pred.push_back(curOffset);
           bbInfo[nextOff].entryStack.resize(curBBInfo.stack.size());
-          auto cond = builder.CreateICmpEQ(curBBInfo.stack.back(), builder.getInt32(0));
+          auto cond = builder.CreateICmp(x == OP_CJMP_Z ? CmpInst::ICMP_EQ : CmpInst::ICMP_NE, curBBInfo.stack.back(), ConstantInt::get(ptrTy, BOX(0)));
           builder.CreateCondBr(cond, bbInfo[target].bb, bbInfo[nextOff].bb);
         } else {
             builder.CreateBr(bbInfo[target].bb);
@@ -370,7 +372,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
         auto gloNo = reader_i32(&reader);
         fprintf(f, "%s\t%d", opcode_to_string(x), gloNo);
         fflush(f);
-        auto val = builder.CreateLoad(i32, globals[gloNo]);
+        auto val = builder.CreateLoad(ptrTy, globals[gloNo]);
         curBBInfo.stack.push_back(val);
         break;
       }
@@ -460,8 +462,8 @@ static void disassemble(FILE *f, const bytecode *bc) {
       }
     }
   }
-  if (llvm::verifyModule(*mod, &llvm::errs())) {
-    llvm::errs() << "Module verification failed!\n";
+  if (verifyModule(*mod, &errs())) {
+    errs() << "Module verification failed!\n";
   }
   mod->print(outs(), nullptr);
 }
