@@ -13,6 +13,7 @@ extern "C" {
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
 
 using namespace llvm;
 
@@ -311,6 +312,7 @@ static void disassemble(FILE *f, const bytecode *bc) {
 
       case OP_END:
         fprintf(f, "%s", opcode_to_string(x));
+        builder.CreateRetVoid();
         end = true;
         break;
       case OP_STA:
@@ -338,6 +340,10 @@ static void disassemble(FILE *f, const bytecode *bc) {
           queue.push_back(nextOff);
           bbInfo[nextOff].pred.push_back(curOffset);
           bbInfo[nextOff].entryStack.resize(curBBInfo.stack.size());
+          auto cond = builder.CreateICmpEQ(curBBInfo.stack.back(), builder.getInt32(0));
+          builder.CreateCondBr(cond, bbInfo[target].bb, bbInfo[nextOff].bb);
+        } else {
+            builder.CreateBr(bbInfo[target].bb);
         }
         queue.push_back(target);
         bbInfo[target].pred.push_back(curOffset);
@@ -453,6 +459,9 @@ static void disassemble(FILE *f, const bytecode *bc) {
         phi->addIncoming(bbInfo[predBBOffset].stack[i], bbInfo[predBBOffset].bb);
       }
     }
+  }
+  if (llvm::verifyModule(*mod, &llvm::errs())) {
+    llvm::errs() << "Module verification failed!\n";
   }
   mod->print(outs(), nullptr);
 }
