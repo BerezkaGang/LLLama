@@ -253,7 +253,11 @@ static void disassemble(FILE *f, const bytecode *bc) {
         break;
 
       case OP_DUP:
+        curBBInfo.stack.push_back(curBBInfo.stack.back());
+        break;
       case OP_SWAP:
+        std::swap(*(curBBInfo.stack.end() - 1), *(curBBInfo.stack.end() - 2));
+        break;
       case OP_ELEM:
         break;
 
