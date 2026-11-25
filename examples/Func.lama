@@ -1,0 +1,8 @@
+fun add(x, y) {
+    x + y
+}
+
+var a = read();
+var b = read();
+var c = add(a, b);
+write(c)
