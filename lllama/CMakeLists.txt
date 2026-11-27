@@ -4,7 +4,7 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-add_library(lllamaLib STATIC disasm.cpp bytecode.c opcodes.c memory.c decode.cpp)
+add_library(lllamaLib STATIC bc_ir.cpp bytecode.c opcodes.c memory.c decode.cpp)
 target_include_directories(lllamaLib
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PRIVATE ${PROJECT_SOURCE_DIR}/include/lllama
@@ -15,7 +15,7 @@ separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
 llvm_map_components_to_libnames(
-    llvm_libs support core executionengine mcjit
+    llvm_libs support core executionengine mcjit x86codegen
 )
 
 target_link_libraries(lllamaLib ${llvm_libs})
